@@ -1715,7 +1715,7 @@ body.menu-open .sticky-topbar .filter-scroll {
 
 /* new login and regsiter media */
 @media (max-width:768px) {
-   
+      
 .register-btn{
     display:none !important;
 }
@@ -1901,9 +1901,10 @@ body.menu-open .sticky-topbar .filter-scroll {
   }
 
   .auth-btn {
-    height: 38px;
-    padding: 0 12px;
+    height: 36px;
+    padding: 0 14px;
     font-size: 12px;
+   border-radius:999px;
   }
 
   .search-box {
