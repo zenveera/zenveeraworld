@@ -1,0 +1,279 @@
+/* ==========================================
+        ZENVEERA PREMIUM LOADER
+========================================== */
+
+
+
+
+#preloader{
+
+    position: fixed;
+
+    inset: 0;
+
+    width: 100vw;
+
+    height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    background: #fff;
+
+    overflow: hidden;
+
+    z-index: 999999;
+
+}
+#preloader.hide {
+
+    opacity: 0;
+    visibility: hidden;
+
+}
+
+/* =========================
+      BACKGROUND
+========================= */
+
+.loader-bg {
+
+    position: absolute;
+    inset: 0;
+
+    background:
+
+        radial-gradient(circle at top left,
+            rgba(30, 64, 208, .08),
+            transparent 35%),
+
+        radial-gradient(circle at bottom right,
+            rgba(255, 106, 0, .08),
+            transparent 35%);
+
+}
+
+/* =========================
+      CONTENT
+========================= */
+
+/* .loader-box{
+
+    position: fixed;
+
+    top: 50%;
+
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    text-align: center;
+
+    width: 90%;
+
+    max-width: 420px;
+
+    padding: 20px;
+
+    z-index: 999999;
+
+} */
+
+/* =========================
+      TITLE
+========================= */
+
+.loader-title{
+
+    margin:0;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:10px;
+
+    font-family:Poppins,sans-serif;
+
+    font-size:48px;
+
+    font-weight:800;
+
+    line-height:1.1;
+
+}
+
+.loader-orange {
+
+    color: #FF6A00;
+
+    animation: leftSlide .9s ease;
+
+}
+
+.loader-blue {
+
+    color: #1E40D0;
+
+    animation: rightSlide .9s ease;
+
+}
+
+/* =========================
+      LINE
+========================= */
+
+.loader-line {
+
+    width: 260px;
+
+    height: 4px;
+
+    margin-top: 35px;
+
+    background: #ececec;
+
+    border-radius: 50px;
+
+    overflow: hidden;
+
+}
+
+.loader-line span {
+
+    display: block;
+
+    width: 35%;
+
+    height: 100%;
+
+    border-radius: 50px;
+
+    background: linear-gradient(90deg,
+            #FF6A00,
+            #1E40D0);
+
+    animation: lineMove 1.1s ease-in-out infinite;
+
+}
+
+/* =========================
+      ANIMATIONS
+========================= */
+
+@keyframes leftSlide {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateX(-50px);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: none;
+
+    }
+
+}
+
+@keyframes rightSlide {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateX(50px);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: none;
+
+    }
+
+}
+
+@keyframes lineMove {
+
+    0% {
+
+        transform: translateX(-120px);
+
+    }
+
+    100% {
+
+        transform: translateX(320px);
+
+    }
+
+}
+
+/* =========================
+      MOBILE
+========================= */
+
+/* ==========================================
+   RESPONSIVE LOADER
+========================================== */
+
+@media (max-width:768px){
+
+    .loader-title{
+
+        font-size:30px;
+
+        gap:6px;
+
+    }
+
+    .loader-line{
+
+        width:180px;
+
+        margin-top:24px;
+
+    }
+
+}
+
+@media (max-width:480px){
+
+    .loader-title{
+
+        font-size:26px;
+
+        flex-direction:column;
+
+        gap:2px;
+
+    }
+
+    .loader-line{
+
+        width:150px;
+
+    }
+
+}

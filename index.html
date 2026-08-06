@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catalog</title>
+    <meta
+      name="description"
+      content="Browse our product catalog and message us to buy."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/loader.css" />
+    <script src="js/loader.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <style>
+    /* ============================================================
+   LOGIN / REGISTER MODAL
+============================================================ */
+
+    .auth-modal-panel {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 20px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .auth-modal-body {
+      padding: 20px 24px 28px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 22px;
+      background: #f5f7fb;
+      padding: 5px;
+      border-radius: 50px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 12px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      color: #666;
+      transition: 0.3s;
+    }
+
+    .auth-tab.active {
+      background: linear-gradient(135deg, #1e40d0, #355eff);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(30, 64, 208, 0.25);
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .auth-form label {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #16213e;
+    }
+
+    .auth-form input {
+      width: 100%;
+      height: 48px;
+      border: 1px solid #d9e2ef;
+      border-radius: 12px;
+      padding: 0 15px;
+      font-size: 15px;
+      outline: none;
+      transition: 0.3s;
+      background: #fff;
+    }
+
+    .auth-form input:focus {
+      border-color: #1e40d0;
+      box-shadow: 0 0 0 4px rgba(30, 64, 208, 0.1);
+    }
+
+    .auth-form button {
+      margin-top: 8px;
+      height: 50px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ff6a00, #ff9234);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .auth-form button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px rgba(255, 106, 0, 0.3);
+    }
+
+    .auth-switch {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .auth-switch a {
+      color: #1e40d0;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .auth-switch a:hover {
+      text-decoration: underline;
+    }
+
+    /* ==========================
+   MOBILE
+========================== */
+
+    @media (max-width: 768px) {
+      .auth-modal-panel {
+        width: 95%;
+        max-width: 100%;
+        margin: 15px;
+        border-radius: 18px;
+      }
+
+      .auth-modal-body {
+        padding: 18px;
+      }
+
+      .auth-form input {
+        height: 46px;
+      }
+
+      .auth-form button {
+        height: 48px;
+      }
+    }
+  </style>
+  <script>
+    // ---------- Mobile hamburger menu (open / close + overlay + auto-close) ----------
+    document.addEventListener("DOMContentLoaded", function () {
+      const menuBtn = document.getElementById("menuBtn");
+      const headerMenu = document.getElementById("headerMenu");
+      const menuOverlay = document.getElementById("menuOverlay");
+
+      if (!menuBtn || !headerMenu) return;
+
+      function setIcon(open) {
+        const icon = menuBtn.querySelector("i");
+        if (!icon) return;
+        icon.classList.toggle("fa-bars", !open);
+        icon.classList.toggle("fa-times", open);
+      }
+
+      function openMenu() {
+        headerMenu.classList.add("show");
+        if (menuOverlay) menuOverlay.classList.add("show");
+        document.body.classList.add("menu-open");
+        setIcon(true);
+      }
+
+      function closeMenu() {
+        headerMenu.classList.remove("show");
+        if (menuOverlay) menuOverlay.classList.remove("show");
+        document.body.classList.remove("menu-open");
+        setIcon(false);
+      }
+
+      menuBtn.addEventListener("click", function () {
+        headerMenu.classList.contains("show") ? closeMenu() : openMenu();
+      });
+
+      // Close when a nav link is tapped, or the dark backdrop is tapped
+      headerMenu
+        .querySelectorAll("a")
+        .forEach((a) => a.addEventListener("click", closeMenu));
+      if (menuOverlay) menuOverlay.addEventListener("click", closeMenu);
+    });
+  </script>
+  <body>
+    <!-- ================= PRELOADER ================= -->
+    <div id="preloader">
+      <div class="loader-bg"></div>
+      <div class="loader-box">
+        <h1 class="loader-title">
+          <span class="loader-orange">Zenveera</span>
+          <span class="loader-blue">World</span>
+        </h1>
+        <div class="loader-line">
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sticky-topbar" id="stickyTopbar">
+      <header class="site-header">
+        <div class="wrap">
+          <!-- Brand -->
+          <div class="brand-section">
+            <img
+              src="images/logo.png"
+              class="brand-logo"
+              alt="Zenveera World"
+            />
+            <div class="brand-text">
+              <h1>
+                <span class="brand-orange">Zenveera</span>
+                <span class="brand-blue">World</span>
+              </h1>
+              <p class="brand-tagline">Good Choice For You</p>
+            </div>
+          </div>
+
+          <!-- Header icons: cart + login/register (mobile) -->
+          <div class="header-icons">
+            <button class="cart-btn" id="cartBtn" aria-label="View cart">
+              <i class="fa-solid fa-cart-shopping"></i>
+              <span class="cart-badge" id="cartBadge" style="display: none"
+                >0</span
+              >
+            </button>
+
+            <!-- Mobile auth buttons (replace old hamburger toggle) -->
+            <span class="guest-auth-actions" id="guestAuthActions">
+              <button class="auth-btn login-btn" id="loginBtn">
+                <i class="fa-solid fa-right-to-bracket"></i> Login
+              </button>
+              <button class="auth-btn register-btn" id="registerBtn">
+                Register
+              </button>
+            </span>
+
+            <!-- Shown instead of the buttons above once a user is logged in -->
+            <span
+              class="user-account-actions is-hidden"
+              id="userAccountActions"
+            >
+              <span class="user-greeting" id="userGreeting"></span>
+              <button class="auth-btn logout-btn" id="logoutBtn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+              </button>
+            </span>
+          </div>
+
+          <!-- Navigation -->
+          <nav class="header-links" id="headerMenu">
+            <a href="#catalog"> <i class="fa-solid fa-store"></i>Catalog </a>
+            <a id="waHeaderLink" href="#" target="_blank">
+              <i class="fa-brands fa-whatsapp"></i>
+              +91 79908 18211
+            </a>
+
+            <a
+              id="instaFooterLink"
+              href="https://www.instagram.com/zenveeraworld?igsh=ZXVjN2Y2MnVkYTNz"
+              target="_blank"
+              rel="noopener"
+            >
+              <i class="fa-brands fa-instagram"></i>
+              @zenveeraworld
+            </a>
+
+            <a
+              id="facebookFooterLink"
+              href="https://www.facebook.com/share/1Fb87EVtyh/"
+              target="_blank"
+              rel="noopener"
+            >
+              <i class="fa-brands fa-facebook"></i>
+              Zenveera World
+            </a>
+          </nav>
+        </div>
+      </header>
+
+      <!-- ================= SEARCH ================= -->
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search products or categories..."
+        />
+      </div>
+
+      <!-- ===========================
+           FILTERS — one simple scrollable row
+           (category chips + In Stock + New, no dropdown)
+      =========================== -->
+      <div class="filter-scroll" id="filterRow">
+        <div class="sale-fixed">
+          <button
+            data-category="offers"
+            class="offer-category-btn"
+            style="color: black"
+          >
+            SALE
+          </button>
+        </div>
+
+        <button class="filter-chip active" data-category="all">All</button>
+
+        <button class="filter-chip filter-chip-new" data-new="1">✨ New</button>
+
+        <button class="filter-chip" data-category="Home & Kitchen">
+          🏠 Home & Kitchen
+        </button>
+
+        <button class="filter-chip" data-category="Water Bottles & Tumblers">
+          🥤 Water Bottles & Tumblers
+        </button>
+
+        <button class="filter-chip" data-category="Lunch & Food Storage">
+          🍱 Lunch & Food Storage
+        </button>
+
+        <button class="filter-chip" data-category="Cleaning Supplies">
+          🧹 Cleaning Supplies
+        </button>
+
+        <button class="filter-chip" data-category="Storage & Organization">
+          📦 Storage & Organization
+        </button>
+
+        <button class="filter-chip" data-category="Bathroom Accessories">
+          🚿 Bathroom Accessories
+        </button>
+
+        <button class="filter-chip" data-category="Home Utility">
+          🏡 Home Utility
+        </button>
+
+        <button class="filter-chip" data-category="Laundry & Drying">
+          🧺 Laundry & Drying
+        </button>
+
+        <button class="filter-chip" data-category="Travel Accessories">
+          🧳 Travel Accessories
+        </button>
+
+        <button class="filter-chip" data-category="Toys & Kids">
+          🧸 Toys & Kids
+        </button>
+
+        <button class="filter-chip" data-category="Stationery & Office">
+          📚 Stationery & Office
+        </button>
+
+        <button class="filter-chip" data-category="Gifts & Decor">
+          🎁 Gifts & Decor
+        </button>
+
+        <button class="filter-chip" data-category="Lighting">
+          💡 Lighting
+        </button>
+
+        <button class="filter-chip" data-category="Tools & Hardware">
+          🔧 Tools & Hardware
+        </button>
+
+        <button class="filter-chip" data-category="Fitness & Sports">
+          🏋️ Fitness & Sports
+        </button>
+
+        <button class="filter-chip" data-category="Monsoon Essentials">
+          🌧️ Monsoon Essentials
+        </button>
+
+        <button class="filter-chip" data-category="Festival & Seasonal">
+          🪔 Festival & Seasonal
+        </button>
+
+        <button class="filter-chip" data-category="Other">📌 Other</button>
+
+        <span class="filter-divider"></span>
+
+        <button class="filter-chip" data-filter="in-stock">🔥 In Stock</button>
+      </div>
+    </div>
+
+    <section class="catalog-section catalog-section-top" id="catalog">
+      <div class="wrap">
+        <!-- ===========================
+             CATALOG STAT BANNER
+             (product count fills in live from Firestore — see catalog.js)
+        =========================== -->
+        <p class="catalog-intro" id="catalogIntro">
+          <i class="fa-solid fa-bag-shopping"></i>
+          Loading catalog…
+        </p>
+
+        <div class="grid" id="productGrid">
+          <!-- product cards injected here -->
+        </div>
+
+        <!-- ===========================
+             LOAD MORE
+        =========================== -->
+        <!-- <div class="load-more-wrap" style="display: none">
+          <button class="btn-load-more" id="loadMoreBtn">
+            Load more products
+          </button>
+        </div> -->
+        <div id="loadTrigger"></div>
+
+        <div class="empty-state" id="emptyState" style="display: none">
+          No products yet. Check back soon.
+        </div>
+      </div>
+    </section>
+
+    <!-- ===========================
+         WHOLESALE BANNER
+    =========================== -->
+    <section class="wholesale-banner">
+      <div class="wrap wholesale-banner-inner">
+        <div class="wholesale-banner-icon">
+          <i class="fa-solid fa-boxes-stacked"></i>
+        </div>
+        <div class="wholesale-banner-text">
+          <h2>Buying in bulk?</h2>
+          <p id="wholesaleBannerNote"></p>
+        </div>
+        <a
+          href="#"
+          id="wholesaleWaBtn"
+          class="btn btn-whatsapp wholesale-banner-btn"
+          target="_blank"
+          rel="noopener"
+        >
+          <i class="fa-brands fa-whatsapp"></i> Enquire on WhatsApp
+        </a>
+      </div>
+    </section>
+
+    <footer class="site-footer" id="footer">
+      <div class="wrap">
+        <div class="footer-grid">
+          <div class="footer-block">
+            <h4>Get in touch</h4>
+            <div class="footer-links">
+
+  <a
+    href="https://wa.me/917990818211"
+    target="_blank"
+    rel="noopener">
+    <i class="fa-brands fa-whatsapp"></i>
+    WhatsApp
+  </a>
+
+  <a href="tel:+917990818211">
+    <i class="fa-solid fa-phone"></i>
+    +91 79908 18211
+  </a>
+
+  <a
+    href="https://www.instagram.com/zenveeraworld?igsh=ZXVjN2Y2MnVkYTNz"
+    target="_blank"
+    rel="noopener">
+    <i class="fa-brands fa-instagram"></i>
+    @zenveeraworld
+  </a>
+
+  <a
+    href="https://www.facebook.com/share/1Fb87EVtyh/"
+    target="_blank"
+    rel="noopener">
+    <i class="fa-brands fa-facebook"></i>
+    Facebook
+  </a>
+
+</div>
+          </div>
+          <div class="footer-block">
+            <h4>Visit us</h4>
+            <p class="wholesale-note" id="footerAddress"></p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span id="footerShopName"></span>
+          <span
+            >Catalog updated regularly — message us to check current
+            availability.</span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <!-- ===========================
+         FLOATING WHATSAPP BUTTON
+    =========================== -->
+    <a
+      href="#"
+      id="waFab"
+      class="fab-whatsapp"
+      target="_blank"
+      rel="noopener"
+      aria-label="Chat on WhatsApp"
+    >
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+        <path
+          d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.3-.4.1-.2 0-.4 0-.5C10 9 9.5 7.7 9.3 7.2c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.5 1.1 2.7c.1.2 2 3 4.8 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 2-1.4.2-.7.2-1.2.1-1.4-.1-.1-.2-.2-.5-.3z"
+        />
+        <path
+          d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.7 1.5 5.3L2 22l4.8-1.5c1.5.9 3.3 1.4 5.2 1.4 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.3c-1.7 0-3.3-.5-4.7-1.3l-.3-.2-3.2 1 1-3.2-.2-.3C3.6 15 3.1 13.5 3.1 12c0-4.9 4-8.9 8.9-8.9s8.9 4 8.9 8.9-4 8.9-8.9 8.9z"
+        />
+      </svg>
+    </a>
+
+    <!-- ===========================
+         CHAT BUBBLE (FAQ ASSISTANT)
+    =========================== -->
+    <div class="chat-widget" id="chatWidget">
+      <div class="chat-panel" id="chatPanel">
+        <div class="chat-panel-header">
+          <span><i class="fa-solid fa-headset"></i> Zenveera Assistant</span>
+          <button id="chatCloseBtn" aria-label="Close chat">✕</button>
+        </div>
+        <div class="chat-panel-body" id="chatBody">
+          <div class="chat-bubble bot">
+            👋 Hi! I can help with wholesale, our shop location, or timings. Tap
+            a question below.
+          </div>
+        </div>
+        <div class="chat-quick-replies" id="chatQuickReplies">
+          <button data-q="wholesale">Wholesale available?</button>
+          <button data-q="location">Shop location?</button>
+          <button data-q="timing">Shop timings?</button>
+          <button data-q="whatsapp">Chat on WhatsApp</button>
+        </div>
+      </div>
+      <button class="chat-fab" id="chatToggleBtn" aria-label="Chat with us">
+        <i class="fa-solid fa-comment-dots"></i>
+      </button>
+    </div>
+
+    <!-- Product detail modal -->
+    <div class="modal-overlay" id="productModal">
+      <div class="modal-panel">
+        <div class="modal-close">
+          <button id="modalCloseBtn" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-image" id="modalImage"></div>
+        <div class="modal-body">
+          <div class="modal-eyebrow" id="modalEyebrow">Product</div>
+          <h3 id="modalName"></h3>
+          <div class="modal-price" id="modalPrice"></div>
+          <div class="oos-banner" id="modalOosBanner" style="display: none">
+            Currently out of stock — message us to ask about restock.
+          </div>
+          <p class="modal-desc" id="modalDesc"></p>
+          <div class="modal-colors" id="modalColorsWrap">
+            <div class="modal-colors-label">Available colors</div>
+            <div class="modal-swatch-row" id="modalSwatches"></div>
+          </div>
+          <div class="modal-qty-row" id="modalQtyRow">
+            <span class="modal-qty-label">Quantity</span>
+            <div class="qty-stepper">
+              <button
+                type="button"
+                id="modalQtyMinus"
+                aria-label="Decrease quantity"
+              >
+                −
+              </button>
+              <span id="modalQtyValue">1</span>
+              <button
+                type="button"
+                id="modalQtyPlus"
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="modalAddToCartBtn" class="btn btn-cart">
+              <i class="fa-solid fa-cart-plus"></i> Add to cart
+            </button>
+          </div>
+          <div class="modal-actions">
+            <a
+              href="#"
+              id="modalWaBtn"
+              class="btn btn-whatsapp"
+              target="_blank"
+              rel="noopener"
+              >Chat on WhatsApp</a
+            >
+            <a href="#" id="modalCallBtn" class="btn btn-outline">Call us</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===========================
+         CART DRAWER
+    =========================== -->
+    <div class="cart-overlay" id="cartOverlay">
+      <div class="cart-panel">
+        <div class="cart-panel-header">
+          <h3><i class="fa-solid fa-cart-shopping"></i> Your cart</h3>
+          <button id="cartCloseBtn" aria-label="Close cart">✕</button>
+        </div>
+
+        <div class="cart-items" id="cartItems">
+          <!-- cart line items injected here -->
+        </div>
+
+        <div class="cart-empty" id="cartEmpty">
+          <div class="cart-empty-icon">
+            <i class="fa-solid fa-cart-shopping"></i>
+          </div>
+          <p>Your cart is empty.</p>
+          <button type="button" class="btn btn-outline" id="cartEmptyBrowseBtn">
+            Browse products
+          </button>
+        </div>
+
+        <div class="cart-footer" id="cartFooter">
+          <div class="cart-guest-details">
+            <p class="cart-guest-label">
+              Your details (so we know who's ordering)
+            </p>
+            <input type="text" id="cartGuestName" placeholder="Your name" />
+            <input
+              type="tel"
+              id="cartGuestPhone"
+              placeholder="Your phone number"
+            />
+          </div>
+          <div class="cart-total-row">
+            <span>Total</span>
+            <span id="cartTotal">₹0</span>
+          </div>
+          <div class="cart-footer-actions">
+            <a
+              href="#"
+              id="cartCheckoutBtn"
+              class="btn btn-whatsapp btn-block"
+              target="_blank"
+              rel="noopener"
+            >
+              <i class="fa-brands fa-whatsapp"></i> Checkout on WhatsApp
+            </a>
+            <button
+              type="button"
+              id="cartDownloadPdfBtn"
+              class="btn btn-outline btn-block"
+            >
+              <i class="fa-solid fa-file-pdf"></i> Download as PDF
+            </button>
+          </div>
+          <p class="cart-checkout-note">
+            We don't take payments online — you'll confirm your order and pay
+            directly with the shop over WhatsApp.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===========================
+         LOGIN / REGISTER MODAL
+    =========================== -->
+    <div class="modal-overlay" id="authModal">
+      <div class="modal-panel auth-modal-panel">
+        <div class="modal-close">
+          <button id="closeAuthModal" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body auth-modal-body">
+          <div class="auth-tabs">
+            <button type="button" class="auth-tab active" id="loginTab">
+              Login
+            </button>
+            <button type="button" class="auth-tab" id="registerTab">
+              Register
+            </button>
+          </div>
+
+          <form id="loginForm" class="auth-form">
+            <label>
+              Email
+              <input
+                type="email"
+                id="loginEmail"
+                placeholder="you@example.com"
+                required
+              />
+            </label>
+            <label>
+              Password
+
+              <div class="password-field">
+                <input
+                  type="password"
+                  id="loginPassword"
+                  placeholder="••••••••"
+                  required
+                />
+
+                <i
+                  class="fa-solid fa-eye toggle-password"
+                  id="toggleLoginPassword"
+                ></i>
+              </div>
+            </label>
+
+            <!-- <p class="login-note">
+    Don't have an account?
+    <span id="goRegister"><a href="">Register Now</a></span>
+</p> -->
+            <p class="login-note">
+              Don't have an account
+              <a href="#" id="goToRegister"> Register here </a>
+            </p>
+            <p class="auth-forgot-row">
+              <a href="#" id="forgotPasswordLink">Forgot password?</a>
+            </p>
+            <p id="authError" class="auth-error"></p>
+            <button type="submit" class="btn btn-whatsapp btn-block">
+              Login
+            </button>
+          </form>
+
+          <form id="registerForm" class="auth-form" style="display: none">
+            <label>
+              Full name
+              <input
+                type="text"
+                id="registerName"
+                placeholder="Your name"
+                required
+              />
+            </label>
+            <label>
+              Phone number (WhatsApp)
+              <input
+                type="tel"
+                id="registerPhone"
+                placeholder="Your phone number"
+                required
+              />
+            </label>
+            <label>
+              Email
+              <input
+                type="email"
+                id="registerEmail"
+                placeholder="you@example.com"
+                required
+              />
+            </label>
+            <label>
+              Password
+
+              <div class="password-field">
+                <input
+                  type="password"
+                  id="registerPassword"
+                  placeholder="Create a password"
+                  required
+                />
+
+                <i
+                  class="fa-solid fa-eye toggle-password"
+                  id="toggleRegisterPassword"
+                ></i>
+              </div>
+            </label>
+            <label>
+              Confirm password
+
+              <div class="password-field">
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  placeholder="Confirm your password"
+                  required
+                />
+
+                <i
+                  class="fa-solid fa-eye toggle-password"
+                  id="toggleConfirmPassword"
+                ></i>
+              </div>
+            </label>
+            <p id="registerAuthError" class="auth-error"></p>
+            <button type="submit" class="btn btn-whatsapp btn-block">
+              Create account
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===========================
+         MOBILE STICKY "VIEW CART" BAR
+    =========================== -->
+    <button
+      type="button"
+      class="cart-sticky-bar"
+      id="cartStickyBar"
+      style="display: none"
+    >
+      <span class="cart-sticky-count"
+        ><i class="fa-solid fa-cart-shopping"></i>
+        <span id="cartStickyCount">0</span> item(s)</span
+      >
+      <span class="cart-sticky-total" id="cartStickyTotal">₹0</span>
+      <span class="cart-sticky-cta"
+        >View cart <i class="fa-solid fa-chevron-right"></i
+      ></span>
+    </button>
+
+    <!-- Firebase SDKs -->
+
+    <div id="menuOverlay"></div>
+
+    <!-- ===========================
+         MOBILE BOTTOM NAVIGATION
+    =========================== -->
+    <nav class="bottom-nav" id="bottomNav">
+      <a href="#catalog" class="bottom-nav-item" id="bottomNavHome">
+        <i class="fa-solid fa-house"></i>
+        <span>Home</span>
+      </a>
+
+      <button type="button" class="bottom-nav-item" id="bottomNavCart">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span
+          class="bottom-nav-badge"
+          id="bottomNavCartBadge"
+          style="display: none"
+          >0</span
+        >
+        <span>Cart</span>
+      </button>
+      <button type="button" class="bottom-nav-item" id="bottomNavAccount">
+        <i class="fa-solid fa-user"></i>
+
+        <span>Login</span>
+      </button>
+      <button type="button" class="bottom-nav-item" id="navMore">
+        <i class="fa-solid fa-bars"></i>
+        <span>More</span>
+      </button>
+    </nav>
+    <div id="moreMenu" class="more-menu">
+      <a href="#catalog">
+        <i class="fa-solid fa-store"></i>
+        Catalog
+      </a>
+
+      <a href="tel:+917990818211">
+        <i class="fa-solid fa-phone"></i>
+        +91 79908 18211
+      </a>
+
+      <a id="moreWhatsapp" href="#">
+        <i class="fa-brands fa-whatsapp"></i>
+        WhatsApp Chat
+      </a>
+
+      <a
+        id="moreInstagram"
+        href="https://www.instagram.com/zenveeraworld?igsh=ZXVjN2Y2MnVkYTNz"
+        target="_blank"
+        rel="noopener"
+      >
+        <i class="fa-brands fa-instagram"></i>
+        @zenveeraworld
+      </a>
+
+      <a
+        id="moreFacebook"
+        href="https://www.facebook.com/share/1Fb87EVtyh/"
+        target="_blank"
+        rel="noopener"
+      >
+        <i class="fa-brands fa-facebook"></i>
+        Zenveera World
+      </a>
+
+      <a id="moreLoginBtn">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        Login
+      </a>
+    </div>
+
+    <div id="moreMenuOverlay" class="more-menu-overlay"></div>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <!-- jsPDF (used by the "Download as PDF" cart button) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="js/site-config.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/categories.js"></script>
+    <script src="js/catalog.js"></script>
+  </body>
+</html>
