@@ -1390,19 +1390,23 @@ if (quickAddBtn) {
         quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
     }
 
-    quickAddBtn.addEventListener("click", async (e) => {
-        e.stopPropagation();
+  quickAddBtn.addEventListener("click", async (e) => {
+    e.stopPropagation();
 
-        if (p.inStock === false) return;
+    if (p.inStock === false) return;
 
-        if (cart.some(item => item.id === p.id && !item.color)) return;
+    if (!currentUser) {
+        openAuthModal();
+        return;
+    }
 
-        await addToCart(p, 1);
+    if (cart.some((item) => item.id === p.id)) return;
 
-        quickAddBtn.classList.add("added");
-        quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
-    });
-}
+    await addToCart(p, 1);
+
+    quickAddBtn.classList.add("added");
+    quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
+});
 
       grid.appendChild(card);
 
