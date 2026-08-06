@@ -1390,7 +1390,7 @@ if (quickAddBtn) {
         quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
     }
 
-  quickAddBtn.addEventListener("click", async (e) => {
+quickAddBtn.addEventListener("click", async (e) => {
     e.stopPropagation();
 
     if (p.inStock === false) return;
