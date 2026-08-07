@@ -1386,10 +1386,19 @@ ${money(p.originalPrice)}
 
 if (quickAddBtn) {
 
-    if (cart.some(item => item.id === p.id && !item.color)) {
-        quickAddBtn.classList.add("added");
-        quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
-    }
+    // if (cart.some(item => item.id === p.id && !item.color)) {
+    //     quickAddBtn.classList.add("added");
+    //     quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
+    // }
+  const inCart = cart.some(item => item.id === p.id);
+
+if (inCart) {
+    quickAddBtn.classList.add("added");
+    quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
+} else {
+    quickAddBtn.classList.remove("added");
+    quickAddBtn.innerHTML = `<i class="fa-solid fa-cart-plus"></i> Add`;
+}
 
     quickAddBtn.addEventListener("click", async (e) => {
         e.stopPropagation();
@@ -2156,6 +2165,7 @@ ${escapeHtml(c.name)}
     });
 
     renderCartUI();
+     renderProducts(); 
   }
 
   auth.onAuthStateChanged(async function (user) {
@@ -2207,6 +2217,7 @@ ${escapeHtml(c.name)}
       cart = [];
 
       renderCartUI();
+       renderProducts();
     }
   });
 
