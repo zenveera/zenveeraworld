@@ -1407,6 +1407,7 @@ quickAddBtn.addEventListener("click", async (e) => {
     quickAddBtn.classList.add("added");
     quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
 });
+}
       grid.appendChild(card);
 
       if (revealObserver) {
@@ -1414,7 +1415,7 @@ quickAddBtn.addEventListener("click", async (e) => {
       } else {
         card.classList.add("in-view");
       }
-    });
+    
   }
 
   /* ==========================================================
