@@ -1416,6 +1416,7 @@ quickAddBtn.addEventListener("click", async (e) => {
         card.classList.add("in-view");
       }
     
+  });
   }
 
   /* ==========================================================
