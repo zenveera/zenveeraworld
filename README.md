@@ -1,5 +1,5 @@
 # Your Catalog Website — Setup Guide
-
+ 
 This is a plain website (no monthly software fees) with:
 - A homepage that lists your products with photo, price, and colors
 - Click a product → see details → "Chat on WhatsApp" or "Call us" button
