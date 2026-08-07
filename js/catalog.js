@@ -120,7 +120,7 @@ Please let me know if it is available.`;
     };
 
     openAuthModal();
-    return;
+    return false;
   }
 
     try {
@@ -180,12 +180,13 @@ await cartRef.set(data);
       }
 
       await loadUserCart(); // refresh header badge + drawer right away
-
+return true;
       // alert("Product Added Successfully");
     } catch (err) {
       console.error(err);
 
       alert(err.message);
+       return false;
     }
   }
 
@@ -1397,10 +1398,12 @@ if (quickAddBtn) {
 
         if (cart.some(item => item.id === p.id && !item.color)) return;
 
-        await addToCart(p, 1);
+        const added = await addToCart(p, 1);
 
-        quickAddBtn.classList.add("added");
-        quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
+if (!added) return;
+
+quickAddBtn.classList.add("added");
+quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
     });
 }
 
