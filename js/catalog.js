@@ -223,6 +223,28 @@ return true;
     await loadUserCart();
   }
 
+  // Deletes every item in the logged-in customer's Firestore cart (called
+  // right after an order is placed) and refreshes the local cart/UI.
+  async function clearCart() {
+    if (!currentUser) return;
+
+    try {
+      const snapshot = await db
+        .collection("users")
+        .doc(currentUser.uid)
+        .collection("cart")
+        .get();
+
+      const batch = db.batch();
+      snapshot.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+    } catch (err) {
+      console.error("Couldn't clear cart:", err);
+    }
+
+    await loadUserCart();
+  }
+
   /* ==========================================================
      3b. STATE
   ========================================================== */
@@ -393,11 +415,10 @@ return true;
     }
   }
 
-  if (cartCheckoutBtn) {
-    cartCheckoutBtn.addEventListener("click", () =>
-      saveOrderRecord("whatsapp"),
-    );
-  }
+  // NOTE: the actual "place order" click handler lives further down
+  // (near the checkout modal / WhatsApp message builder). It calls
+  // saveOrderRecord's job itself now, so we don't double-attach a
+  // second, differently-shaped order write here.
 
   // Best-effort fetch of a remote product image as a data URL so it can be
   // embedded in the PDF. Resolves to null (never rejects) if the image is
@@ -1205,6 +1226,137 @@ return true;
 
   renderCartUI();
   renderProducts();
+
+  /* ==========================================================
+     3d. MY ORDERS DRAWER (customer-facing order history + status)
+  ========================================================== */
+  const ordersOverlay = document.getElementById("ordersOverlay");
+  const ordersCloseBtn = document.getElementById("ordersCloseBtn");
+  const ordersList = document.getElementById("ordersList");
+  const ordersEmpty = document.getElementById("ordersEmpty");
+  const ordersEmptyBrowseBtn = document.getElementById("ordersEmptyBrowseBtn");
+  const bottomNavOrders = document.getElementById("bottomNavOrders");
+  const ordersHeaderBtn = document.getElementById("ordersHeaderBtn");
+
+  let ordersUnsubscribe = null; // stops the live listener when we log out
+
+  function openOrders() {
+    if (!currentUser) {
+      openAuthModal("login");
+      return;
+    }
+    ordersOverlay.classList.add("open");
+    document.body.classList.add("modal-open");
+  }
+
+  function closeOrders() {
+    ordersOverlay.classList.remove("open");
+    document.body.classList.remove("modal-open");
+  }
+
+  function orderStatusLabel(status) {
+    if (status === "completed") return "Completed";
+    if (status === "cancelled") return "Cancelled";
+    return "Pending";
+  }
+
+  function renderOrdersList(orders) {
+    if (!orders.length) {
+      ordersList.style.display = "none";
+      ordersEmpty.style.display = "flex";
+      return;
+    }
+    ordersList.style.display = "block";
+    ordersEmpty.style.display = "none";
+
+    ordersList.innerHTML = orders
+      .map((order) => {
+        const status = order.status || "pending";
+        const dateStr =
+          order.createdAt && typeof order.createdAt.toDate === "function"
+            ? order.createdAt.toDate().toLocaleString("en-IN", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })
+            : "";
+
+        const itemsStr = (order.items || [])
+          .map((it) => `${escapeHtml(it.name)} × ${it.qty}`)
+          .join(", ");
+
+        return `
+          <div class="order-card-mini">
+            <div class="order-card-mini-top">
+              <span class="order-card-mini-id">${escapeHtml(order.orderId || order.id)}</span>
+              <span class="order-status-pill ${status}">${orderStatusLabel(status)}</span>
+            </div>
+            <p class="order-card-mini-date">${dateStr}</p>
+            <p class="order-card-mini-items">${itemsStr}</p>
+            <div class="order-card-mini-total">
+              <span>Total</span>
+              <span>${money(order.total)}</span>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  // Attaches (or re-attaches) a live listener scoped to the logged-in
+  // customer's own orders, so status changes made by the admin (pending ->
+  // completed/cancelled) show up instantly without the customer refreshing.
+  function listenToUserOrders() {
+    if (ordersUnsubscribe) {
+      ordersUnsubscribe();
+      ordersUnsubscribe = null;
+    }
+    if (!currentUser) {
+      renderOrdersList([]);
+      return;
+    }
+
+    ordersUnsubscribe = db
+      .collection("orders")
+      .where("userId", "==", currentUser.uid)
+      .orderBy("createdAt", "desc")
+      .onSnapshot(
+        (snapshot) => {
+          const orders = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          renderOrdersList(orders);
+        },
+        (err) => {
+          console.error("Couldn't load orders:", err);
+          ordersList.style.display = "none";
+          ordersEmpty.style.display = "flex";
+          ordersEmpty.querySelector("p").textContent =
+            "Couldn't load your orders right now. Please try again shortly.";
+        },
+      );
+  }
+
+  if (bottomNavOrders) bottomNavOrders.addEventListener("click", openOrders);
+  if (ordersHeaderBtn) ordersHeaderBtn.addEventListener("click", openOrders)
+  if (ordersCloseBtn) ordersCloseBtn.addEventListener("click", closeOrders);
+  if (ordersOverlay) {
+    ordersOverlay.addEventListener("click", (e) => {
+      if (e.target === ordersOverlay) closeOrders();
+    });
+  }
+  if (ordersEmptyBrowseBtn) {
+    ordersEmptyBrowseBtn.addEventListener("click", () => {
+      closeOrders();
+      document.getElementById("catalog").scrollIntoView({ behavior: "smooth" });
+    });
+  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && ordersOverlay.classList.contains("open")) {
+      closeOrders();
+    }
+  });
+
   /* ==========================================================
      4. SCROLL-REVEAL (fade cards in as they enter the viewport)
   ========================================================== */
@@ -1441,6 +1593,28 @@ quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
   /* ==========================================================
      7. FILTER CHIPS (category + In Stock + New — single row)
   ========================================================== */
+  // After any filter chip click, bring the top of the product grid into
+  // view — otherwise the newly filtered results render wherever the
+  // person happened to be scrolled, off-screen above their current view.
+  // function scrollToCatalogTop() {
+  //   const catalogSection = document.getElementById("catalog");
+  //   if (catalogSection) {
+  //     catalogSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  //   } else if (filterRow) {
+  //     filterRow.scrollIntoView({ behavior: "smooth", block: "start" });
+  //   }
+  // }
+function scrollToCatalogTop() {
+    const catalogSection = document.getElementById("catalog");
+    const stickyBar = document.querySelector(".sticky-topbar");
+    if (catalogSection) {
+      const offset = stickyBar ? stickyBar.offsetHeight : 0;
+      const top = catalogSection.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: "smooth" });
+    } else if (filterRow) {
+      filterRow.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
   const filterRow = document.getElementById("filterRow");
   if (filterRow) {
     filterRow.addEventListener("click", (e) => {
@@ -1451,8 +1625,27 @@ quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
           .querySelectorAll("[data-category]")
           .forEach((b) => b.classList.remove("active"));
         catBtn.classList.add("active");
+
+        // Clicking "All" should reset every filter, not just category —
+        // otherwise "New" / "In stock" stay stuck on even though "All"
+        // now looks selected, and it takes an extra click to clear them.
+       newOnly = false;
+        const newBtnEl = filterRow.querySelector("[data-new]");
+        if (newBtnEl) newBtnEl.classList.remove("active");
+
+        // Clicking "All" additionally resets "In stock" too — a full reset.
+        if (currentCategory === "all") {
+          currentFilter = "all";
+
+          const stockBtnEl = filterRow.querySelector(
+            '[data-filter="in-stock"]',
+          );
+          if (stockBtnEl) stockBtnEl.classList.remove("active");
+        }
+
         resetPaging();
         renderProducts();
+        scrollToCatalogTop();
         return;
       }
 
@@ -1464,6 +1657,7 @@ quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
           : "all";
         resetPaging();
         renderProducts();
+        scrollToCatalogTop();
         return;
       }
 
@@ -1473,6 +1667,7 @@ quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
         newOnly = newBtn.classList.contains("active");
         resetPaging();
         renderProducts();
+        scrollToCatalogTop();
         return;
       }
     });
@@ -2165,7 +2360,7 @@ ${escapeHtml(c.name)}
     });
 
     renderCartUI();
-     renderProducts(); 
+    //  renderProducts(); 
   }
 
   auth.onAuthStateChanged(async function (user) {
@@ -2219,6 +2414,8 @@ ${escapeHtml(c.name)}
       renderCartUI();
        renderProducts();
     }
+
+    listenToUserOrders();
   });
 
   if (navMore) {
@@ -2272,6 +2469,216 @@ ${escapeHtml(c.name)}
       }, 300);
     }
   });
+
+  // ==============================
+  // Checkout modal
+  // ==============================
+  const openCheckoutBtn = document.getElementById('openCheckoutBtn');
+  const checkoutModal = document.getElementById('checkoutModal');
+  const checkoutOverlay = document.getElementById('checkoutOverlay');
+  const checkoutCloseBtn = document.getElementById('checkoutCloseBtn');
+  const addressToggleBtn = document.getElementById('addressToggleBtn');
+  const addressForm = document.getElementById('addressForm');
+
+  if (openCheckoutBtn && checkoutModal) {
+    openCheckoutBtn.addEventListener('click', () => {
+      alert("button click");
+
+      const total = cart.reduce((sum, item) => {
+        return sum + (Number(item.price || 0) * Number(item.qty || 0));
+      }, 0);
+
+      if (total < 100) {
+        alert('Minimum order value is ₹100.');
+        return;
+      }
+
+      checkoutModal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    });
+  }
+
+  function closeCheckoutModal() {
+    checkoutModal.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  checkoutCloseBtn?.addEventListener('click', closeCheckoutModal);
+  checkoutOverlay?.addEventListener('click', closeCheckoutModal);
+
+  addressToggleBtn?.addEventListener('click', () => {
+    addressForm.classList.toggle('hidden');
+
+    const expanded = !addressForm.classList.contains('hidden');
+
+    addressToggleBtn.innerHTML = expanded
+      ? '<i class="fa-solid fa-location-dot"></i> Hide Delivery Address'
+      : '<i class="fa-solid fa-location-dot"></i> Add Delivery Address';
+  });
+  // ==============================
+// Continue to WhatsApp
+// ==============================
+// const cartCheckoutBtn = document.getElementById('cartCheckoutBtn');
+
+cartCheckoutBtn?.addEventListener('click', async () => {
+
+  const name = document.getElementById('cartGuestName').value.trim();
+const phone = document.getElementById('cartGuestPhone').value.trim();
+
+if (!name) {
+  alert('Please enter your name.');
+  return;
+}
+
+if (!phone) {
+  alert('Please enter your phone number.');
+  return;
+}
+
+// ==============================
+// Cart total
+// ==============================
+const total = cart.reduce((sum, item) => {
+  return sum + (Number(item.price || 0) * Number(item.qty || 0));
+}, 0);
+
+if (total < 100) {
+  alert('Minimum order value is ₹100.');
+  return;
+}
+
+// ==============================
+// Address fields
+// ==============================
+const house = document.getElementById('guestHouse')?.value.trim() || '';
+const street = document.getElementById('guestStreet')?.value.trim() || '';
+const area = document.getElementById('guestArea')?.value.trim() || '';
+const pincode = document.getElementById('guestPincode')?.value.trim() || '';
+const landmark = document.getElementById('guestLandmark')?.value.trim() || '';
+
+if (!area) {
+  alert('Please enter your delivery area/city.');
+  return;
+}
+
+// ==============================
+// Order ID + Date + Time
+// ==============================
+const now = new Date();
+
+const orderId =
+  'ZW-' +
+  now.getFullYear() +
+  String(now.getMonth() + 1).padStart(2, '0') +
+  String(now.getDate()).padStart(2, '0') +
+  '-' +
+  Math.floor(Math.random() * 9000 + 1000);
+
+const orderDate = now.toLocaleDateString('en-IN');
+
+const orderTime = now.toLocaleTimeString('en-IN', {
+  hour: '2-digit',
+  minute: '2-digit'
+});
+
+// ==============================
+// WhatsApp message
+// ==============================
+let message = `🛒 *ZENVEERA WORLD - NEW ORDER*%0A%0A`;
+
+message += `📅 Date: ${orderDate}%0A`;
+message += `🕒 Time: ${orderTime}%0A`;
+message += `🆔 Order ID: ${orderId}%0A%0A`;
+
+message += `━━━━━━━━━━━━━━━%0A%0A`;
+
+message += `👤 *Customer Details*%0A`;
+message += `Name: ${name}%0A`;
+message += `Phone: ${phone}%0A%0A`;
+
+message += `📍 *Delivery Address*%0A`;
+
+if (house) message += `House/Flat: ${house}%0A`;
+if (street) message += `Street/Society: ${street}%0A`;
+if (area) message += `Area/City: ${area}%0A`;
+if (pincode) message += `Pincode: ${pincode}%0A`;
+if (landmark) message += `Landmark: ${landmark}%0A`;
+
+message += `%0A━━━━━━━━━━━━━━━%0A%0A`;
+
+message += `📦 *Order Items*%0A`;
+
+cart.forEach((item, index) => {
+  const lineTotal = Number(item.price || 0) * Number(item.qty || 0);
+
+  message += `%0A${index + 1}️⃣ *${item.name}*%0A`;
+  message += `Qty: ${item.qty}%0A`;
+  message += `Price: ₹${item.price}%0A`;
+
+  if (item.color) {
+    message += `Color: ${item.color}%0A`;
+  }
+
+  message += `Subtotal: ₹${lineTotal}%0A`;
+
+  if (item.imageUrl) {
+    message += `🔗 Image: ${item.imageUrl}%0A`;
+  }
+});
+
+message += `%0A━━━━━━━━━━━━━━━%0A%0A`;
+
+message += `🧾 Items: ${cart.length}%0A`;
+message += `💰 *Total Amount: ₹${total}*%0A%0A`;
+
+message += `🚚 Free home delivery in *Vavol only*%0A`;
+message += `💳 *Prepaid orders only* (COD not available)%0A`;
+message += `🛍️ Minimum order ₹100%0A%0A`;
+
+message += `📞 *Zenveera World*%0A`;
+message += `+91 7990818211%0A`;
+message += `https://www.instagram.com/zenveeraworld%0A%0A`;
+
+message += `🙏 Thank you for shopping with *Zenveera World*!`;
+
+// ==============================
+// Save order, then open WhatsApp
+// ==============================
+try {
+  await db.collection('orders').doc(orderId).set({
+    orderId: orderId,
+    userId: currentUser ? currentUser.uid : null,
+    customerName: name,
+    phone: phone,
+    address: {
+      house,
+      street,
+      area,
+      pincode,
+      landmark
+    },
+    items: cart,
+    total: total,
+    status: 'pending',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+} catch (err) {
+  // WhatsApp is still the source of truth for the order itself, so we
+  // don't block checkout on this — but the customer won't see it under
+  // "My Orders" until the Firestore rules/index issue is fixed.
+  console.error('Could not save order for tracking:', err);
+}
+
+const whatsappNumber = '917990818211';
+const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
+
+window.open(whatsappUrl, '_blank');
+
+// Order placed — empty the cart now.
+await clearCart();
+
+closeCheckoutModal();
+});
 })();
 const goToRegister = document.getElementById("goToRegister");
 
