@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zenveera Orders</title>
+  <link rel="stylesheet" href="css/orders.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+</head>
+<body class="orders-page">
+
+  <header class="orders-header">
+    <h1>Zenveera Orders</h1>
+    <button id="logoutBtn" class="orders-logout-btn">
+      <i class="fa-solid fa-right-from-bracket"></i> Logout
+    </button>
+  </header>
+
+  <main class="orders-main">
+
+    <div class="orders-search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="orderSearch" placeholder="Search by customer or order ID" />
+    </div>
+
+    <div class="orders-stats">
+      <div class="stat-card pending">
+        <span>Pending</span>
+        <strong id="pendingCount">0</strong>
+      </div>
+
+      <div class="stat-card completed">
+        <span>Completed</span>
+        <strong id="completedCount">0</strong>
+      </div>
+
+      <div class="stat-card cancelled">
+        <span>Cancelled</span>
+        <strong id="cancelledCount">0</strong>
+      </div>
+    </div>
+
+    <div class="orders-filters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="pending">Pending</button>
+      <button class="filter-btn" data-filter="completed">Completed</button>
+      <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+    </div>
+
+    <div id="ordersContainer" class="orders-grid">
+      <p class="orders-empty">Loading orders…</p>
+    </div>
+
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/admin-orders.js"></script>
+
+</body>
+</html>
