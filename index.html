@@ -254,6 +254,9 @@
                 >0</span
               >
             </button>
+            <button class="cart-btn" id="ordersHeaderBtn" aria-label="View my orders">
+  <i class="fa-solid fa-receipt"></i>
+</button>
 
             <!-- Mobile auth buttons (replace old hamburger toggle) -->
             <span class="guest-auth-actions" id="guestAuthActions">
@@ -653,7 +656,7 @@
           </button>
         </div>
 
-        <div class="cart-footer" id="cartFooter">
+        <!-- <div class="cart-footer" id="cartFooter">
           <div class="cart-guest-details">
             <p class="cart-guest-label">
               Your details (so we know who's ordering)
@@ -691,7 +694,46 @@
             We don't take payments online — you'll confirm your order and pay
             directly with the shop over WhatsApp.
           </p>
-        </div>
+        </div> -->
+   <div class="cart-footer" id="cartFooter">
+
+  <div class="cart-compact-note">
+    <i class="fa-solid fa-truck"></i>
+    Free delivery in Vavol only • Prepaid only • Min order ₹100
+  </div>
+
+  <div class="cart-total-row">
+    <span>Total</span>
+    <span id="cartTotal">₹0</span>
+  </div>
+
+  <div class="cart-footer-actions">
+
+    <button
+      type="button"
+      id="openCheckoutBtn"
+      class="btn btn-whatsapp btn-block"
+    >
+      <i class="fa-solid fa-cart-shopping"></i>
+      Place Order
+    </button>
+
+    <button
+      type="button"
+      id="cartDownloadPdfBtn"
+      class="btn btn-outline btn-block"
+    >
+      <i class="fa-solid fa-file-pdf"></i>
+      Download as PDF
+    </button>
+
+  </div>
+
+  <p class="cart-checkout-note">
+    We don't take payments online — you'll confirm your order over WhatsApp.
+  </p>
+
+</div>
       </div>
     </div>
 
@@ -853,6 +895,96 @@
     <div id="menuOverlay"></div>
 
     <!-- ===========================
+         MY ORDERS DRAWER
+    =========================== -->
+    <div class="cart-overlay" id="ordersOverlay">
+      <div class="cart-panel">
+        <div class="cart-panel-header">
+          <h3><i class="fa-solid fa-receipt"></i> My orders</h3>
+          <button id="ordersCloseBtn" aria-label="Close orders">✕</button>
+        </div>
+
+        <div id="ordersList" class="orders-list-wrap">
+          <!-- order cards injected here -->
+        </div>
+
+        <div class="cart-empty" id="ordersEmpty" style="display:none;">
+          <div class="cart-empty-icon">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <p>You haven't placed any orders yet.</p>
+          <button type="button" class="btn btn-outline" id="ordersEmptyBrowseBtn">
+            Browse products
+          </button>
+        </div>
+      </div>
+    </div>
+    <style>
+      .orders-list-wrap {
+        padding: 14px;
+        overflow-y: auto;
+        flex: 1;
+      }
+      .order-card-mini {
+        border: 1px solid #e7e7ee;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        background: #fff;
+      }
+      .order-card-mini-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .order-card-mini-id {
+        font-weight: 600;
+        font-size: 13.5px;
+      }
+      .order-card-mini-date {
+        font-size: 11.5px;
+        color: #8a8a97;
+        margin: 2px 0 8px;
+      }
+      .order-status-pill {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 999px;
+        text-transform: capitalize;
+        white-space: nowrap;
+      }
+      .order-status-pill.pending {
+        background: #fff4d6;
+        color: #92700c;
+      }
+      .order-status-pill.completed {
+        background: #d9f5e3;
+        color: #12723d;
+      }
+      .order-status-pill.cancelled {
+        background: #fde1e1;
+        color: #a12222;
+      }
+      .order-card-mini-items {
+        font-size: 12.5px;
+        color: #55555f;
+        margin: 0 0 8px;
+        line-height: 1.5;
+      }
+      .order-card-mini-total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13.5px;
+        font-weight: 700;
+        border-top: 1px dashed #e7e7ee;
+        padding-top: 8px;
+      }
+    </style>
+
+    <!-- ===========================
          MOBILE BOTTOM NAVIGATION
     =========================== -->
     <nav class="bottom-nav" id="bottomNav">
@@ -870,6 +1002,10 @@
           >0</span
         >
         <span>Cart</span>
+      </button>
+      <button type="button" class="bottom-nav-item" id="bottomNavOrders">
+        <i class="fa-solid fa-receipt"></i>
+        <span>Orders</span>
       </button>
       <button type="button" class="bottom-nav-item" id="bottomNavAccount">
         <i class="fa-solid fa-user"></i>
@@ -922,7 +1058,48 @@
         Login
       </a>
     </div>
+<div class="checkout-modal" id="checkoutModal">
+  <div class="checkout-overlay" id="checkoutOverlay"></div>
 
+  <div class="checkout-panel">
+    <button class="checkout-close" id="checkoutCloseBtn">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <h3>Place your order</h3>
+
+    <div class="checkout-form">
+      <input type="text" id="cartGuestName" placeholder="Full name">
+
+      <input type="tel" id="cartGuestPhone" placeholder="Mobile number">
+
+      <button type="button" class="address-toggle-btn" id="addressToggleBtn">
+        <i class="fa-solid fa-location-dot"></i>
+        Add Delivery Address
+      </button>
+
+      <div class="address-form hidden" id="addressForm">
+        <input type="text" id="guestHouse" placeholder="House / Flat No.">
+        <input type="text" id="guestStreet" placeholder="Street / Society Name">
+        <input type="text" id="guestArea" placeholder="Area / Village / City">
+        <input type="text" id="guestPincode" placeholder="Pincode">
+        <textarea id="guestLandmark" rows="2" placeholder="Landmark (optional)"></textarea>
+      </div>
+
+      <div class="delivery-note">
+        <strong>Delivery Information</strong><br>
+        🚚 Free home delivery in <strong>Vavol only</strong><br>
+        💳 <strong>Prepaid orders only</strong> — COD not available<br>
+        🛒 <strong>Minimum order ₹100</strong>
+      </div>
+
+      <button type="button" id="cartCheckoutBtn" class="btn btn-whatsapp btn-block">
+        <i class="fa-brands fa-whatsapp"></i>
+        Continue to WhatsApp
+      </button>
+    </div>
+  </div>
+</div>
     <div id="moreMenuOverlay" class="more-menu-overlay"></div>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
