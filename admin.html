@@ -17,6 +17,88 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/admin.css">
+    <style>
+      .header-btn-group{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+      }
+
+      .btn-manage-orders{
+        position:relative;
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        border:none;
+        background:#0f172a;
+        color:#fff;
+        padding:10px 16px;
+        border-radius:12px;
+        font-weight:600;
+        font-size:14px;
+        text-decoration:none;
+        cursor:pointer;
+        transition:all .18s ease;
+        white-space:nowrap;
+      }
+
+      .btn-manage-orders:hover{
+        background:#1e293b;
+        transform:translateY(-1px);
+      }
+
+      .btn-manage-orders i{
+        font-size:14px;
+      }
+
+      .orders-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:20px;
+        height:20px;
+        padding:0 5px;
+        border-radius:999px;
+        background:#dc2626;
+        color:#fff;
+        font-size:11px;
+        font-weight:700;
+        line-height:1;
+      }
+
+      /* Mobile: header actions wrap and buttons go full width so nothing
+         gets cramped or cut off on small screens */
+      @media (max-width:600px){
+        .header-btn-group{
+          width:100%;
+          gap:8px;
+        }
+
+        .btn-manage-orders,
+        .header-btn-group .logout-btn{
+          flex:1 1 0;
+          justify-content:center;
+          padding:12px 10px;
+          font-size:13px;
+        }
+
+        .btn-manage-orders span:not(.orders-badge){
+          display:inline;
+        }
+      }
+
+      @media (max-width:380px){
+        .btn-manage-orders span:not(.orders-badge){
+          display:none;
+        }
+
+        .btn-manage-orders,
+        .header-btn-group .logout-btn{
+          padding:12px;
+        }
+      }
+    </style>
     
   </head>
   <body>
@@ -112,13 +194,21 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
 
 </div>
 
-    <button id="logoutBtn" class="logout-btn">
+    <div class="header-btn-group">
+        <a href="admin-orders.html" id="manageOrdersBtn" class="btn-manage-orders">
+            <i class="fa-solid fa-receipt"></i>
+            <span>Manage Orders</span>
+            <span id="pendingOrdersBadge" class="orders-badge" style="display:none;">0</span>
+        </a>
 
-        <i class="fa-solid fa-right-from-bracket"></i>
+        <button id="logoutBtn" class="logout-btn">
 
-        Logout
+            <i class="fa-solid fa-right-from-bracket"></i>
 
-    </button>
+            Logout
+
+        </button>
+    </div>
 
 </div>
 
@@ -480,5 +570,42 @@ field.style.display=offer.checked?"block":"none";
     <script src="js/site-config.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/admin.js"></script>
+
+    <script>
+      // Live badge on the "Manage Orders" button showing how many orders
+      // are currently pending — uses the same db instance set up by
+      // firebase-config.js, so no extra Firebase init needed here.
+      (function () {
+        const badge = document.getElementById("pendingOrdersBadge");
+        if (!badge || typeof db === "undefined") return;
+
+        function attachListener() {
+          db.collection("orders")
+            .where("status", "==", "pending")
+            .onSnapshot(
+              (snapshot) => {
+                const count = snapshot.size;
+                if (count > 0) {
+                  badge.textContent = count > 99 ? "99+" : count;
+                  badge.style.display = "inline-flex";
+                } else {
+                  badge.style.display = "none";
+                }
+              },
+              (err) => {
+                console.error("Pending orders badge listener failed:", err);
+              },
+            );
+        }
+
+        if (typeof auth !== "undefined") {
+          auth.onAuthStateChanged((user) => {
+            if (user) attachListener();
+          });
+        } else {
+          attachListener();
+        }
+      })();
+    </script>
   </body>
 </html>
