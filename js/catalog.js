@@ -82,7 +82,7 @@ Please let me know if it is available.`;
   // Cart lives ONLY in Firestore (per logged-in user). This array is just
   // an in-memory mirror of whatever loadUserCart() last fetched.
   let cart = [];
-  let pendingCart=null;
+  let pendingCart = null;
   function loadGuest() {
     try {
       const raw = localStorage.getItem(GUEST_KEY);
@@ -112,16 +112,15 @@ Please let me know if it is available.`;
 
   async function addToCart(product, qty = 1, color = null) {
     if (!currentUser) {
+      pendingCart = {
+        product,
+        qty,
+        color,
+      };
 
-    pendingCart = {
-      product,
-      qty,
-      color,
-    };
-
-    openAuthModal();
-    return false;
-  }
+      openAuthModal();
+      return false;
+    }
 
     try {
       // const cartRef = db
@@ -176,17 +175,17 @@ Please let me know if it is available.`;
           addedAt: firebase.firestore.FieldValue.serverTimestamp(),
         };
 
-await cartRef.set(data);
+        await cartRef.set(data);
       }
 
       await loadUserCart(); // refresh header badge + drawer right away
-return true;
+      return true;
       // alert("Product Added Successfully");
     } catch (err) {
       console.error(err);
 
       alert(err.message);
-       return false;
+      return false;
     }
   }
 
@@ -210,7 +209,7 @@ return true;
     await loadUserCart();
   }
 
- async function removeFromCart(cartId) {
+  async function removeFromCart(cartId) {
     if (!currentUser) return;
 
     await db
@@ -1131,7 +1130,8 @@ return true;
 
     // Mobile sticky bar
     if (cartStickyBar) {
-      cartStickyBar.style.display = count > 0 ? "flex" : "none";
+      const cartIsOpen = cartOverlay && cartOverlay.classList.contains("open");
+      cartStickyBar.style.display = count > 0 && !cartIsOpen ? "flex" : "none";
       document.body.classList.toggle("cart-bar-visible", count > 0);
       if (cartStickyCount) cartStickyCount.textContent = count;
       if (cartStickyTotal) cartStickyTotal.textContent = money(total);
@@ -1338,7 +1338,7 @@ return true;
   }
 
   if (bottomNavOrders) bottomNavOrders.addEventListener("click", openOrders);
-  if (ordersHeaderBtn) ordersHeaderBtn.addEventListener("click", openOrders)
+  if (ordersHeaderBtn) ordersHeaderBtn.addEventListener("click", openOrders);
   if (ordersCloseBtn) ordersCloseBtn.addEventListener("click", closeOrders);
   if (ordersOverlay) {
     ordersOverlay.addEventListener("click", (e) => {
@@ -1534,39 +1534,38 @@ ${money(p.originalPrice)}
         if (e.key === "Enter") openModal(p);
       });
 
-     const quickAddBtn = card.querySelector(".card-add-btn");
+      const quickAddBtn = card.querySelector(".card-add-btn");
 
-if (quickAddBtn) {
+      if (quickAddBtn) {
+        // if (cart.some(item => item.id === p.id && !item.color)) {
+        //     quickAddBtn.classList.add("added");
+        //     quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
+        // }
+        const inCart = cart.some((item) => item.id === p.id);
 
-    // if (cart.some(item => item.id === p.id && !item.color)) {
-    //     quickAddBtn.classList.add("added");
-    //     quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
-    // }
-  const inCart = cart.some(item => item.id === p.id);
+        if (inCart) {
+          quickAddBtn.classList.add("added");
+          quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
+        } else {
+          quickAddBtn.classList.remove("added");
+          quickAddBtn.innerHTML = `<i class="fa-solid fa-cart-plus"></i> Add`;
+        }
 
-if (inCart) {
-    quickAddBtn.classList.add("added");
-    quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
-} else {
-    quickAddBtn.classList.remove("added");
-    quickAddBtn.innerHTML = `<i class="fa-solid fa-cart-plus"></i> Add`;
-}
+        quickAddBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
 
-    quickAddBtn.addEventListener("click", async (e) => {
-        e.stopPropagation();
+          if (p.inStock === false) return;
 
-        if (p.inStock === false) return;
+          if (cart.some((item) => item.id === p.id && !item.color)) return;
 
-        if (cart.some(item => item.id === p.id && !item.color)) return;
+          const added = await addToCart(p, 1);
 
-        const added = await addToCart(p, 1);
+          if (!added) return;
 
-if (!added) return;
-
-quickAddBtn.classList.add("added");
-quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
-    });
-}
+          quickAddBtn.classList.add("added");
+          quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
+        });
+      }
 
       grid.appendChild(card);
 
@@ -1574,6 +1573,25 @@ quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
         revealObserver.observe(card);
       } else {
         card.classList.add("in-view");
+      }
+    });
+  }
+
+  // Lightweight sync: updates just the Add/Added state of existing
+  // grid buttons to match the current cart, without rebuilding the
+  // whole grid (avoids the flicker/scroll-jump of a full re-render).
+  function syncCardAddButtons() {
+    if (!grid) return;
+    grid.querySelectorAll(".card-add-btn").forEach((btn) => {
+      if (btn.disabled) return; // out-of-stock button, leave alone
+      const id = btn.dataset.addId;
+      const inCart = cart.some((item) => String(item.id) === id);
+      if (inCart) {
+        btn.classList.add("added");
+        btn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
+      } else {
+        btn.classList.remove("added");
+        btn.innerHTML = `<i class="fa-solid fa-cart-plus"></i> Add`;
       }
     });
   }
@@ -1604,12 +1622,13 @@ quickAddBtn.innerHTML = `<i class="fa-solid fa-check"></i> Added`;
   //     filterRow.scrollIntoView({ behavior: "smooth", block: "start" });
   //   }
   // }
-function scrollToCatalogTop() {
+  function scrollToCatalogTop() {
     const catalogSection = document.getElementById("catalog");
     const stickyBar = document.querySelector(".sticky-topbar");
     if (catalogSection) {
       const offset = stickyBar ? stickyBar.offsetHeight : 0;
-      const top = catalogSection.getBoundingClientRect().top + window.scrollY - offset;
+      const top =
+        catalogSection.getBoundingClientRect().top + window.scrollY - offset;
       window.scrollTo({ top, behavior: "smooth" });
     } else if (filterRow) {
       filterRow.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1629,7 +1648,7 @@ function scrollToCatalogTop() {
         // Clicking "All" should reset every filter, not just category —
         // otherwise "New" / "In stock" stay stuck on even though "All"
         // now looks selected, and it takes an extra click to clear them.
-       newOnly = false;
+        newOnly = false;
         const newBtnEl = filterRow.querySelector("[data-new]");
         if (newBtnEl) newBtnEl.classList.remove("active");
 
@@ -2360,7 +2379,7 @@ ${escapeHtml(c.name)}
     });
 
     renderCartUI();
-     renderProducts(); 
+    syncCardAddButtons();
   }
 
   auth.onAuthStateChanged(async function (user) {
@@ -2400,19 +2419,18 @@ ${escapeHtml(c.name)}
     if (currentUser) {
       await loadUserCart();
       if (pendingCart) {
-    await addToCart(
-        pendingCart.product,
-        pendingCart.qty,
-        pendingCart.color
-    );
+        await addToCart(
+          pendingCart.product,
+          pendingCart.qty,
+          pendingCart.color,
+        );
 
-    pendingCart = null;
-}
+        pendingCart = null;
+      }
     } else {
       cart = [];
-
       renderCartUI();
-       renderProducts();
+      syncCardAddButtons();
     }
 
     listenToUserOrders();
@@ -2473,212 +2491,215 @@ ${escapeHtml(c.name)}
   // ==============================
   // Checkout modal
   // ==============================
-  const openCheckoutBtn = document.getElementById('openCheckoutBtn');
-  const checkoutModal = document.getElementById('checkoutModal');
-  const checkoutOverlay = document.getElementById('checkoutOverlay');
-  const checkoutCloseBtn = document.getElementById('checkoutCloseBtn');
-  const addressToggleBtn = document.getElementById('addressToggleBtn');
-  const addressForm = document.getElementById('addressForm');
+  const openCheckoutBtn = document.getElementById("openCheckoutBtn");
+  const checkoutModal = document.getElementById("checkoutModal");
+  const checkoutOverlay = document.getElementById("checkoutOverlay");
+  const checkoutCloseBtn = document.getElementById("checkoutCloseBtn");
+  const addressToggleBtn = document.getElementById("addressToggleBtn");
+  const addressForm = document.getElementById("addressForm");
 
   if (openCheckoutBtn && checkoutModal) {
-    openCheckoutBtn.addEventListener('click', () => {
-      
+    openCheckoutBtn.addEventListener("click", () => {
+      alert("button click");
 
       const total = cart.reduce((sum, item) => {
-        return sum + (Number(item.price || 0) * Number(item.qty || 0));
+        return sum + Number(item.price || 0) * Number(item.qty || 0);
       }, 0);
 
       if (total < 100) {
-        alert('Minimum order value is ₹100.');
+        alert("Minimum order value is ₹100.");
         return;
       }
 
-      checkoutModal.classList.add('show');
-      document.body.style.overflow = 'hidden';
+      checkoutModal.classList.add("show");
+      document.body.style.overflow = "hidden";
     });
   }
 
   function closeCheckoutModal() {
-    checkoutModal.classList.remove('show');
-    document.body.style.overflow = '';
+    checkoutModal.classList.remove("show");
+    document.body.style.overflow = "";
   }
 
-  checkoutCloseBtn?.addEventListener('click', closeCheckoutModal);
-  checkoutOverlay?.addEventListener('click', closeCheckoutModal);
+  checkoutCloseBtn?.addEventListener("click", closeCheckoutModal);
+  checkoutOverlay?.addEventListener("click", closeCheckoutModal);
 
-  addressToggleBtn?.addEventListener('click', () => {
-    addressForm.classList.toggle('hidden');
+  addressToggleBtn?.addEventListener("click", () => {
+    addressForm.classList.toggle("hidden");
 
-    const expanded = !addressForm.classList.contains('hidden');
+    const expanded = !addressForm.classList.contains("hidden");
 
     addressToggleBtn.innerHTML = expanded
       ? '<i class="fa-solid fa-location-dot"></i> Hide Delivery Address'
       : '<i class="fa-solid fa-location-dot"></i> Add Delivery Address';
   });
   // ==============================
-// Continue to WhatsApp
-// ==============================
-// const cartCheckoutBtn = document.getElementById('cartCheckoutBtn');
+  // Continue to WhatsApp
+  // ==============================
+  // const cartCheckoutBtn = document.getElementById('cartCheckoutBtn');
 
-cartCheckoutBtn?.addEventListener('click', async () => {
+  cartCheckoutBtn?.addEventListener("click", async () => {
+    const name = document.getElementById("cartGuestName").value.trim();
+    const phone = document.getElementById("cartGuestPhone").value.trim();
 
-  const name = document.getElementById('cartGuestName').value.trim();
-const phone = document.getElementById('cartGuestPhone').value.trim();
+    if (!name) {
+      alert("Please enter your name.");
+      return;
+    }
 
-if (!name) {
-  alert('Please enter your name.');
-  return;
-}
+    if (!phone) {
+      alert("Please enter your phone number.");
+      return;
+    }
 
-if (!phone) {
-  alert('Please enter your phone number.');
-  return;
-}
+    // ==============================
+    // Cart total
+    // ==============================
+    const total = cart.reduce((sum, item) => {
+      return sum + Number(item.price || 0) * Number(item.qty || 0);
+    }, 0);
 
-// ==============================
-// Cart total
-// ==============================
-const total = cart.reduce((sum, item) => {
-  return sum + (Number(item.price || 0) * Number(item.qty || 0));
-}, 0);
+    if (total < 100) {
+      alert("Minimum order value is ₹100.");
+      return;
+    }
 
-if (total < 100) {
-  alert('Minimum order value is ₹100.');
-  return;
-}
+    // ==============================
+    // Address fields
+    // ==============================
+    const house = document.getElementById("guestHouse")?.value.trim() || "";
+    const street = document.getElementById("guestStreet")?.value.trim() || "";
+    const area = document.getElementById("guestArea")?.value.trim() || "";
+    const pincode = document.getElementById("guestPincode")?.value.trim() || "";
+    const landmark =
+      document.getElementById("guestLandmark")?.value.trim() || "";
 
-// ==============================
-// Address fields
-// ==============================
-const house = document.getElementById('guestHouse')?.value.trim() || '';
-const street = document.getElementById('guestStreet')?.value.trim() || '';
-const area = document.getElementById('guestArea')?.value.trim() || '';
-const pincode = document.getElementById('guestPincode')?.value.trim() || '';
-const landmark = document.getElementById('guestLandmark')?.value.trim() || '';
+    if (!area) {
+      alert("Please enter your delivery area/city.");
+      return;
+    }
 
-if (!area) {
-  alert('Please enter your delivery area/city.');
-  return;
-}
+    // ==============================
+    // Order ID + Date + Time
+    // ==============================
+    const now = new Date();
 
-// ==============================
-// Order ID + Date + Time
-// ==============================
-const now = new Date();
+    const orderId =
+      "ZW-" +
+      now.getFullYear() +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      String(now.getDate()).padStart(2, "0") +
+      "-" +
+      Math.floor(Math.random() * 9000 + 1000);
 
-const orderId =
-  'ZW-' +
-  now.getFullYear() +
-  String(now.getMonth() + 1).padStart(2, '0') +
-  String(now.getDate()).padStart(2, '0') +
-  '-' +
-  Math.floor(Math.random() * 9000 + 1000);
+    const orderDate = now.toLocaleDateString("en-IN");
 
-const orderDate = now.toLocaleDateString('en-IN');
+    const orderTime = now.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-const orderTime = now.toLocaleTimeString('en-IN', {
-  hour: '2-digit',
-  minute: '2-digit'
-});
+    // ==============================
+    // WhatsApp message
+    // ==============================
+    let message = `🛒 *ZENVEERA WORLD - NEW ORDER*%0A%0A`;
 
-// ==============================
-// WhatsApp message
-// ==============================
-let message = `🛒 *ZENVEERA WORLD - NEW ORDER*%0A%0A`;
+    message += `📅 Date: ${orderDate}%0A`;
+    message += `🕒 Time: ${orderTime}%0A`;
+    message += `🆔 Order ID: ${orderId}%0A%0A`;
 
-message += `📅 Date: ${orderDate}%0A`;
-message += `🕒 Time: ${orderTime}%0A`;
-message += `🆔 Order ID: ${orderId}%0A%0A`;
+    message += `━━━━━━━━━━━━━━━%0A%0A`;
 
-message += `━━━━━━━━━━━━━━━%0A%0A`;
+    message += `👤 *Customer Details*%0A`;
+    message += `Name: ${name}%0A`;
+    message += `Phone: ${phone}%0A%0A`;
 
-message += `👤 *Customer Details*%0A`;
-message += `Name: ${name}%0A`;
-message += `Phone: ${phone}%0A%0A`;
+    message += `📍 *Delivery Address*%0A`;
 
-message += `📍 *Delivery Address*%0A`;
+    if (house) message += `House/Flat: ${house}%0A`;
+    if (street) message += `Street/Society: ${street}%0A`;
+    if (area) message += `Area/City: ${area}%0A`;
+    if (pincode) message += `Pincode: ${pincode}%0A`;
+    if (landmark) message += `Landmark: ${landmark}%0A`;
 
-if (house) message += `House/Flat: ${house}%0A`;
-if (street) message += `Street/Society: ${street}%0A`;
-if (area) message += `Area/City: ${area}%0A`;
-if (pincode) message += `Pincode: ${pincode}%0A`;
-if (landmark) message += `Landmark: ${landmark}%0A`;
+    message += `%0A━━━━━━━━━━━━━━━%0A%0A`;
 
-message += `%0A━━━━━━━━━━━━━━━%0A%0A`;
+    message += `📦 *Order Items*%0A`;
 
-message += `📦 *Order Items*%0A`;
+    cart.forEach((item, index) => {
+      const lineTotal = Number(item.price || 0) * Number(item.qty || 0);
 
-cart.forEach((item, index) => {
-  const lineTotal = Number(item.price || 0) * Number(item.qty || 0);
+      message += `%0A${index + 1}️⃣ *${item.name}*%0A`;
+      message += `Qty: ${item.qty}%0A`;
+      message += `Price: ₹${item.price}%0A`;
 
-  message += `%0A${index + 1}️⃣ *${item.name}*%0A`;
-  message += `Qty: ${item.qty}%0A`;
-  message += `Price: ₹${item.price}%0A`;
+      if (item.color) {
+        message += `Color: ${item.color}%0A`;
+      }
 
-  if (item.color) {
-    message += `Color: ${item.color}%0A`;
-  }
+      message += `Subtotal: ₹${lineTotal}%0A`;
 
-  message += `Subtotal: ₹${lineTotal}%0A`;
+      if (item.imageUrl) {
+        message += `🔗 Image: ${item.imageUrl}%0A`;
+      }
+    });
 
-  if (item.imageUrl) {
-    message += `🔗 Image: ${item.imageUrl}%0A`;
-  }
-});
+    message += `%0A━━━━━━━━━━━━━━━%0A%0A`;
 
-message += `%0A━━━━━━━━━━━━━━━%0A%0A`;
+    message += `🧾 Items: ${cart.length}%0A`;
+    message += `💰 *Total Amount: ₹${total}*%0A%0A`;
 
-message += `🧾 Items: ${cart.length}%0A`;
-message += `💰 *Total Amount: ₹${total}*%0A%0A`;
+    message += `🚚 Free home delivery in *Vavol only*%0A`;
+    message += `💳 *Prepaid orders only* (COD not available)%0A`;
+    message += `🛍️ Minimum order ₹100%0A%0A`;
 
-message += `🚚 Free home delivery in *Vavol only*%0A`;
-message += `💳 *Prepaid orders only* (COD not available)%0A`;
-message += `🛍️ Minimum order ₹100%0A%0A`;
+    message += `📞 *Zenveera World*%0A`;
+    message += `+91 7990818211%0A`;
+    message += `https://www.instagram.com/zenveeraworld%0A%0A`;
 
-message += `📞 *Zenveera World*%0A`;
-message += `+91 7990818211%0A`;
-message += `https://www.instagram.com/zenveeraworld%0A%0A`;
+    message += `🙏 Thank you for shopping with *Zenveera World*!`;
 
-message += `🙏 Thank you for shopping with *Zenveera World*!`;
+    // ==============================
+    // Save order, then open WhatsApp
+    // ==============================
+    try {
+      await db
+        .collection("orders")
+        .doc(orderId)
+        .set({
+          orderId: orderId,
+          userId: currentUser ? currentUser.uid : null,
+          customerName: name,
+          phone: phone,
+          address: {
+            house,
+            street,
+            area,
+            pincode,
+            landmark,
+          },
+          items: cart,
+          total: total,
+          status: "pending",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+    } catch (err) {
+      // WhatsApp is still the source of truth for the order itself, so we
+      // don't block checkout on this — but the customer won't see it under
+      // "My Orders" until the Firestore rules/index issue is fixed.
+      console.error("Could not save order for tracking:", err);
+    }
 
-// ==============================
-// Save order, then open WhatsApp
-// ==============================
-try {
-  await db.collection('orders').doc(orderId).set({
-    orderId: orderId,
-    userId: currentUser ? currentUser.uid : null,
-    customerName: name,
-    phone: phone,
-    address: {
-      house,
-      street,
-      area,
-      pincode,
-      landmark
-    },
-    items: cart,
-    total: total,
-    status: 'pending',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    const whatsappNumber = "917990818211";
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
+
+    window.open(whatsappUrl, "_blank");
+
+    // Order placed — empty the cart now.
+    await clearCart();
+
+    closeCheckoutModal();
   });
-} catch (err) {
-  // WhatsApp is still the source of truth for the order itself, so we
-  // don't block checkout on this — but the customer won't see it under
-  // "My Orders" until the Firestore rules/index issue is fixed.
-  console.error('Could not save order for tracking:', err);
-}
-
-const whatsappNumber = '917990818211';
-const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
-
-window.open(whatsappUrl, '_blank');
-
-// Order placed — empty the cart now.
-await clearCart();
-
-closeCheckoutModal();
-});
 })();
 const goToRegister = document.getElementById("goToRegister");
 
