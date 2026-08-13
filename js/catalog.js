@@ -2500,7 +2500,7 @@ ${escapeHtml(c.name)}
 
   if (openCheckoutBtn && checkoutModal) {
     openCheckoutBtn.addEventListener("click", () => {
-      alert("button click");
+      
 
       const total = cart.reduce((sum, item) => {
         return sum + Number(item.price || 0) * Number(item.qty || 0);
