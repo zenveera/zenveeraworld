@@ -2360,7 +2360,7 @@ ${escapeHtml(c.name)}
     });
 
     renderCartUI();
-    //  renderProducts(); 
+     renderProducts(); 
   }
 
   auth.onAuthStateChanged(async function (user) {
