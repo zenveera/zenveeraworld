@@ -221,13 +221,70 @@
           <span class="loader-orange">Zenveera</span>
           <span class="loader-blue">World</span>
         </h1>
+        <!-- Text/on-off controlled from site-config.js (festivalBanner) -->
+        <p class="loader-festival-line" id="loaderFestivalLine" style="display:none;"></p>
         <div class="loader-line">
           <span></span>
         </div>
       </div>
     </div>
 
+    <style>
+      /* ---- Festival / sale banner (site-config.js controls text + on/off) ---- */
+      .festival-banner {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        position: relative;
+        width: 100%;
+        padding: 9px 40px 9px 14px;
+        background: linear-gradient(90deg, #ff6a00, #ff3d81);
+        color: #fff;
+        font-family: "Inter", sans-serif;
+        font-weight: 600;
+        font-size: 13.5px;
+        text-align: center;
+        line-height: 1.4;
+      }
+      .festival-banner.show {
+        display: flex;
+      }
+      #festivalBannerClose {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: rgba(255, 255, 255, 0.22);
+        color: #fff;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 12px;
+        line-height: 1;
+      }
+      .loader-festival-line {
+        margin: 10px 0 0;
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: #ff3d81;
+        text-align: center;
+      }
+      @media (max-width: 480px) {
+        .festival-banner {
+          font-size: 12px;
+          padding: 8px 34px 8px 10px;
+        }
+      }
+    </style>
     <div class="sticky-topbar" id="stickyTopbar">
+      <div class="festival-banner" id="festivalBanner">
+        <span id="festivalBannerText"></span>
+        <button type="button" id="festivalBannerClose" aria-label="Close banner">✕</button>
+      </div>
       <header class="site-header">
         <div class="wrap">
           <!-- Brand -->
