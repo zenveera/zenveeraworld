@@ -48,7 +48,7 @@ const SITE_CONFIG = {
   festivalBanner: {
     active: true,
     text: "🎉 Happy Raksha Bandhan! Rakhi Sale goes LIVE 26–27 August — Flat 10% OFF Sitewide 🎁",
-    // loaderText: "🪔 Happy Raksha Bandhan! Rakhi Sale is Live",
+    loaderText: "🪔 Happy Raksha Bandhan! Rakhi Sale Will Be Live",
     Used by the "Apply Sale to All" button in admin.html
     discountPercent: 10,
   },
