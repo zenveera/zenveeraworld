@@ -78,6 +78,111 @@
   if (downloadCatalogBtn) {
     downloadCatalogBtn.addEventListener("click", downloadCatalog);
   }
+
+  /* ==========================================================
+     4b. FESTIVAL SALE — apply / end a sitewide % discount
+     Reuses the existing per-product onSale/discountPrice fields
+     (same ones the "Offer / Discount Product" toggle uses), so
+     the badge, strikethrough price, etc. everywhere already
+     just work. A "festivalSale" flag marks which products this
+     tool put on sale, so "End Sale" only reverts those — any
+     product you'd already put on sale manually by hand is left
+     alone either way.
+  ========================================================== */
+  // Reads from site-config.js (festivalBanner.discountPercent) so
+  // running a sale at a different % is a one-line edit there, not here.
+  const FESTIVAL_DISCOUNT_PERCENT =
+    (SITE_CONFIG.festivalBanner && SITE_CONFIG.festivalBanner.discountPercent) || 10;
+  const applyFestivalSaleBtn = document.getElementById("applyFestivalSaleBtn");
+  const endFestivalSaleBtn = document.getElementById("endFestivalSaleBtn");
+
+  if (applyFestivalSaleBtn) {
+    applyFestivalSaleBtn.innerHTML = `<i class="fa-solid fa-tags"></i> Apply Sale (${FESTIVAL_DISCOUNT_PERCENT}% off)`;
+  }
+
+  async function runInBatchesOf500(items, writeFn) {
+    for (let i = 0; i < items.length; i += 500) {
+      const chunk = items.slice(i, i + 500);
+      const batch = db.batch();
+      chunk.forEach((item) => writeFn(batch, item));
+      await batch.commit();
+    }
+  }
+
+  if (applyFestivalSaleBtn) {
+    applyFestivalSaleBtn.addEventListener("click", async () => {
+      const eligible = products.filter((p) => !p.onSale);
+      if (!eligible.length) {
+        alert("Every product is already on sale — nothing to change.");
+        return;
+      }
+      const ok = confirm(
+        `Apply a flat ${FESTIVAL_DISCOUNT_PERCENT}% discount to ${eligible.length} product(s)?\n\n` +
+          `Products already marked "On Sale" individually will be left untouched.`,
+      );
+      if (!ok) return;
+
+      applyFestivalSaleBtn.disabled = true;
+      try {
+        await runInBatchesOf500(eligible, (batch, p) => {
+          const originalPrice = p.originalPrice || p.price;
+          const discountPrice =
+            Math.round(originalPrice * (1 - FESTIVAL_DISCOUNT_PERCENT / 100) * 100) / 100;
+
+          batch.update(db.collection("products").doc(p.id), {
+            originalPrice: originalPrice,
+            discountPrice: discountPrice,
+            price: discountPrice,
+            onSale: true,
+            festivalSale: true,
+          });
+        });
+        alert(`Rakhi sale applied to ${eligible.length} product(s)!`);
+      } catch (err) {
+        console.error("Festival sale apply failed:", err);
+        alert("Something went wrong applying the sale. Please try again.");
+      } finally {
+        applyFestivalSaleBtn.disabled = false;
+      }
+    });
+  }
+
+  if (endFestivalSaleBtn) {
+    endFestivalSaleBtn.addEventListener("click", async () => {
+      // Only reverts products that THIS tool put on sale (festivalSale
+      // flag). Products marked on sale manually via the per-product
+      // "Offer / Discount" toggle never get festivalSale set, so they're
+      // left untouched here.
+      const toRevert = products.filter((p) => p.festivalSale);
+      if (!toRevert.length) {
+        alert("No products currently have the festival sale applied.");
+        return;
+      }
+      const ok = confirm(
+        `Restore normal prices on ${toRevert.length} product(s)?`,
+      );
+      if (!ok) return;
+
+      endFestivalSaleBtn.disabled = true;
+      try {
+        await runInBatchesOf500(toRevert, (batch, p) => {
+          batch.update(db.collection("products").doc(p.id), {
+            price: p.originalPrice || p.price,
+            discountPrice: null,
+            onSale: false,
+            festivalSale: false,
+          });
+        });
+        alert(`Festival sale ended on ${toRevert.length} product(s).`);
+      } catch (err) {
+        console.error("Festival sale end failed:", err);
+        alert("Something went wrong ending the sale. Please try again.");
+      } finally {
+        endFestivalSaleBtn.disabled = false;
+      }
+    });
+  }
+
   let searchText = "";
 
   function subscribeToProducts() {
