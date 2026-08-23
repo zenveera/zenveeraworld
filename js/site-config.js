@@ -47,8 +47,8 @@ const SITE_CONFIG = {
   // to true. To end a sale, set active to false. Nothing else to touch.
   festivalBanner: {
     active: true,
-    text: "🎉 Happy Raksha Bandhan! Rakhi Sale is LIVE — Flat 10% OFF Sitewide 🎁",
-    loaderText: "🪔 Happy Raksha Bandhan! Rakhi Sale is Live",
+    text: "🎉 Happy Raksha Bandhan! Rakhi Sale goes LIVE 26–27 August — Flat 10% OFF Sitewide 🎁",
+    // loaderText: "🪔 Happy Raksha Bandhan! Rakhi Sale is Live",
     // Used by the "Apply Sale to All" button in admin.html
     discountPercent: 10,
   },
