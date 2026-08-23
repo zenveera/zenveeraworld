@@ -38,6 +38,7 @@ const SITE_CONFIG = {
  
   // Shown when a customer asks about wholesale in the chat bubble
   wholesaleAvailable: true,
+   
  
   // ---- Festival / sale banner shown as a slim strip above the header ----
   // This ONE block controls every sale from now on — the banner, the
