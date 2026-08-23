@@ -60,15 +60,7 @@
       CONTENT
 ========================= */
 
-/* .loader-box{
-
-    position: fixed;
-
-    top: 50%;
-
-    left: 50%;
-
-    transform: translate(-50%, -50%);
+.loader-box {
 
     display: flex;
 
@@ -84,11 +76,9 @@
 
     max-width: 420px;
 
-    padding: 20px;
+    padding: 0 20px;
 
-    z-index: 999999;
-
-} */
+}
 
 /* =========================
       TITLE
@@ -138,7 +128,11 @@
 
 .loader-line {
 
-    width: 260px;
+    width: 70%;
+
+    max-width: 260px;
+
+    min-width: 140px;
 
     height: 4px;
 
@@ -250,7 +244,11 @@
 
     .loader-line{
 
-        width:180px;
+        width:70%;
+
+        max-width:180px;
+
+        min-width:120px;
 
         margin-top:24px;
 
@@ -272,7 +270,11 @@
 
     .loader-line{
 
-        width:150px;
+        width:75%;
+
+        max-width:150px;
+
+        min-width:110px;
 
     }
 
