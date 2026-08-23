@@ -268,6 +268,9 @@
             <button class="btn-edit" data-action="edit" data-id="${product.id}">
               Edit
             </button>
+            <button class="btn-edit" data-action="link" data-id="${product.id}" title="Copy a shareable link to this product">
+              Copy Link
+            </button>
             <button class="btn-delete" data-action="delete" data-id="${product.id}">
               Delete
             </button>
@@ -300,6 +303,25 @@
       } else if (btn.dataset.action === "delete") {
         if (confirm(`Delete "${product.name}"? This can't be undone.`)) {
           db.collection("products").doc(id).delete();
+        }
+      } else if (btn.dataset.action === "link") {
+        // Builds a direct link to this product on the customer site by
+        // taking the current admin URL and swapping "admin.html" for
+        // "index.html" — works no matter what domain/folder this is
+        // hosted under, since it's the same site.
+        const shareUrl =
+          location.origin +
+          location.pathname.replace("admin.html", "index.html") +
+          "?product=" +
+          id;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard
+            .writeText(shareUrl)
+            .then(() => alert("Link copied! Paste it in Instagram, WhatsApp, etc.:\n\n" + shareUrl))
+            .catch(() => prompt("Copy this link:", shareUrl));
+        } else {
+          prompt("Copy this link:", shareUrl);
         }
       }
     });
