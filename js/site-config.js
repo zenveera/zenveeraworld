@@ -46,7 +46,7 @@ const SITE_CONFIG = {
   // "Sunday Sale"), just edit the text/percent below and set active
   // to true. To end a sale, set active to false. Nothing else to touch.
   festivalBanner: {
-    active: false,
+    active: true,
     text: "🎉 Happy Raksha Bandhan! Rakhi Sale is LIVE — Flat 10% OFF Sitewide 🎁",
     loaderText: "🪔 Happy Raksha Bandhan! Rakhi Sale is Live",
     // Used by the "Apply Sale to All" button in admin.html
