@@ -38,6 +38,44 @@ Please let me know if it is available.`;
       "© " + new Date().getFullYear() + " " + SITE_CONFIG.shopName;
   }
 
+  /* ==========================================================
+     2b. FESTIVAL / SALE BANNER + LOADER LINE
+     Both are driven entirely by SITE_CONFIG.festivalBanner in
+     site-config.js — to run a new sale (text/percent) or end one
+     (active: false), only that file needs editing, never this one.
+     Banner dismiss lasts for the current tab session only, so it
+     reappears on the next visit.
+  ========================================================== */
+  (function setupFestivalBanner() {
+    const cfg = SITE_CONFIG.festivalBanner;
+    const banner = document.getElementById("festivalBanner");
+    const bannerText = document.getElementById("festivalBannerText");
+    const closeBtn = document.getElementById("festivalBannerClose");
+    const loaderLine = document.getElementById("loaderFestivalLine");
+
+    if (loaderLine) {
+      if (cfg && cfg.active && cfg.loaderText) {
+        loaderLine.textContent = cfg.loaderText;
+        loaderLine.style.display = "block";
+      } else {
+        loaderLine.style.display = "none";
+      }
+    }
+
+    if (!cfg || !banner || !cfg.active) return;
+    if (sessionStorage.getItem("festivalBannerDismissed") === "1") return;
+
+    bannerText.textContent = cfg.text || "";
+    banner.classList.add("show");
+
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        banner.classList.remove("show");
+        sessionStorage.setItem("festivalBannerDismissed", "1");
+      });
+    }
+  })();
+
   const wholesaleBannerNote = document.getElementById("wholesaleBannerNote");
   if (wholesaleBannerNote) {
     wholesaleBannerNote.textContent = SITE_CONFIG.wholesaleText;
