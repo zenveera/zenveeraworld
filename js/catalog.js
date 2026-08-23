@@ -1902,6 +1902,29 @@ ${escapeHtml(c.name)}
     document.getElementById("modalCallBtn").href =
       "tel:" + SITE_CONFIG.phoneDisplay.replace(/[^\d+]/g, "");
 
+    const modalShareBtn = document.getElementById("modalShareBtn");
+    if (modalShareBtn) {
+      modalShareBtn.onclick = () => {
+        const shareUrl =
+          location.origin + location.pathname + "?product=" + p.id;
+        const shareText = `Check out ${p.name || "this product"} on ${SITE_CONFIG.shopName}`;
+
+        if (navigator.share) {
+          // Native share sheet on phones — same one Amazon/Flipkart use
+          navigator
+            .share({ title: p.name || SITE_CONFIG.shopName, text: shareText, url: shareUrl })
+            .catch(() => {});
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard
+            .writeText(shareUrl)
+            .then(() => alert("Product link copied! You can now paste and send it."))
+            .catch(() => prompt("Copy this link:", shareUrl));
+        } else {
+          prompt("Copy this link:", shareUrl);
+        }
+      };
+    }
+
     const modalPanelEl = modal.querySelector(".modal-panel");
     if (modalPanelEl) modalPanelEl.scrollTop = 0;
 
@@ -2003,6 +2026,28 @@ ${escapeHtml(c.name)}
             hideLoader();
           }, 500);
         });
+
+        // ---------------------------------------------------------
+        // SHAREABLE PRODUCT LINKS
+        // If the page was opened as e.g. index.html?product=abc123
+        // (from an Instagram bio link, WhatsApp, etc.), jump straight
+        // to that product's modal instead of making the customer
+        // search for it. Runs once per page load.
+        // ---------------------------------------------------------
+        if (!window.__sharedProductOpened) {
+          const sharedId = new URLSearchParams(window.location.search).get(
+            "product",
+          );
+          if (sharedId) {
+            const sharedProduct = allProducts.find(
+              (p) => p.id === sharedId,
+            );
+            if (sharedProduct) {
+              window.__sharedProductOpened = true;
+              openModal(sharedProduct);
+            }
+          }
+        }
       },
       (err) => {
         console.error("Failed to load products:", err);
@@ -2500,7 +2545,7 @@ ${escapeHtml(c.name)}
 
   if (openCheckoutBtn && checkoutModal) {
     openCheckoutBtn.addEventListener("click", () => {
-      
+      alert("button click");
 
       const total = cart.reduce((sum, item) => {
         return sum + Number(item.price || 0) * Number(item.qty || 0);
