@@ -6,8 +6,17 @@
   ========================================================== */
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-  const CLOUD_NAME = "xbqatgeh";
-  const UPLOAD_PRESET = "zenveera_upload";
+  /* ----------------------------------------------------------
+     IMAGEKIT CONFIG
+     - PUBLIC_KEY and URL_ENDPOINT come from your ImageKit
+       dashboard (Developer Options). Safe to be public.
+     - AUTH_ENDPOINT is the Cloudflare Worker URL that hands out
+       a one-time upload signature. See SETUP.md for how to get
+       both of these.
+  ---------------------------------------------------------- */
+  const IMAGEKIT_PUBLIC_KEY = "PASTE_YOUR_IMAGEKIT_PUBLIC_KEY_HERE";
+  const IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/PASTE_YOUR_IMAGEKIT_ID_HERE";
+  const IMAGEKIT_AUTH_ENDPOINT = "https://PASTE_YOUR_WORKER_SUBDOMAIN.workers.dev";
 
   /* ==========================================================
      2. DOM REFERENCES (login screen)
@@ -636,7 +645,7 @@
     .addEventListener("click", () => addColorRow());
 
   /* ==========================================================
-     11. IMAGE UPLOAD (Cloudinary — no Firebase Storage)
+     11. IMAGE UPLOAD (ImageKit — no Firebase Storage)
   ========================================================== */
   let selectedImage = null;
 
@@ -647,23 +656,44 @@
     }
   });
 
-  async function uploadToCloudinary(file) {
+  // Asks the Cloudflare Worker (AUTH_ENDPOINT) for a one-time
+  // token/signature/expire, since ImageKit uploads from the browser
+  // must be signed — the private key never touches this file.
+  async function getImageKitAuthParams() {
+    const response = await fetch(IMAGEKIT_AUTH_ENDPOINT);
+
+    if (!response.ok) {
+      throw new Error("Could not get upload authorization. Try again.");
+    }
+
+    return response.json(); // { token, expire, signature }
+  }
+
+  async function uploadToImageKit(file) {
+    const { token, expire, signature } = await getImageKitAuthParams();
+
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
+    formData.append("fileName", file.name);
+    formData.append("publicKey", IMAGEKIT_PUBLIC_KEY);
+    formData.append("signature", signature);
+    formData.append("expire", expire);
+    formData.append("token", token);
+    formData.append("useUniqueFileName", "true");
+    formData.append("folder", "/products");
 
     const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      "https://upload.imagekit.io/api/v1/files/upload",
       { method: "POST", body: formData },
     );
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error.message);
+      throw new Error(data.message || "Image upload failed.");
     }
 
-    return data.secure_url;
+    return data.url;
   }
 
   /* ==========================================================
@@ -703,7 +733,7 @@
         const file = row.querySelector(".color-image").files[0];
 
         if (file) {
-          imageUrl = await uploadToCloudinary(file);
+          imageUrl = await uploadToImageKit(file);
         }
 
         colors.push({
@@ -720,7 +750,7 @@
       if (selectedImage) {
         document.getElementById("uploadStatus").textContent =
           "Uploading image...";
-        imageUrl = await uploadToCloudinary(selectedImage);
+        imageUrl = await uploadToImageKit(selectedImage);
         document.getElementById("uploadStatus").textContent = "Upload Complete";
       }
 
