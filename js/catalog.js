@@ -311,6 +311,17 @@ Please let me know if it is available.`;
     return div.innerHTML;
   }
 
+  // Adds an ImageKit resize/compress transformation to a URL so we
+  // don't ship full-camera-resolution photos for a small card image.
+  // Safe no-op on any URL that isn't an ImageKit URL (e.g. old
+  // Cloudinary links still on some products during migration).
+  function ikResized(url, width) {
+    if (!url) return url;
+    if (!url.includes("ik.imagekit.io")) return url;
+    const sep = url.includes("?") ? "&" : "?";
+    return `${url}${sep}tr=w-${width},q-80`;
+  }
+
   // A product counts as "New" if it was added within the last 14 days.
   // function isNewProduct(p) {
   //   if (!p.createdAt || typeof p.createdAt.toDate !== "function") return false;
@@ -1192,7 +1203,7 @@ Please let me know if it is available.`;
         .map(
           (item) => `
         <div class="cart-line" data-id="${item.cartId}">
-          <div class="cart-line-img" style="${item.imageUrl ? `background-image:url('${item.imageUrl}')` : ""}"></div>
+          <div class="cart-line-img" style="${item.imageUrl ? `background-image:url('${ikResized(item.imageUrl, 150)}')` : ""}"></div>
           <div class="cart-line-info">
             <p class="cart-line-name">${escapeHtml(item.name)}</p>
             ${item.color ? `<p class="cart-line-color">Color: ${escapeHtml(item.color)}</p>` : ""}
@@ -1515,7 +1526,7 @@ ${p.onSale ? '<div class="offer-badge">🔥 OFFER</div>' : ""}
         <div class="card-image">
     ${
       p.imageUrl
-        ? `<img src="${p.imageUrl}"
+        ? `<img src="${ikResized(p.imageUrl, 400)}"
                alt="${escapeHtml(p.name || "Product")}"
                loading="lazy">`
         : `<div class="no-image">No Image</div>`
@@ -1811,7 +1822,7 @@ ${money(p.originalPrice)}
     let currentImage = p.imageUrl;
 
     if (currentImage) {
-      modalImage.style.backgroundImage = `url('${currentImage}')`;
+      modalImage.style.backgroundImage = `url('${ikResized(currentImage, 800)}')`;
     } else {
       modalImage.style.backgroundImage = "none";
     }
@@ -1915,7 +1926,7 @@ ${escapeHtml(c.name)}
           if (el.dataset.main) {
             currentModalColor = null;
 
-            modalImage.style.backgroundImage = `url('${p.imageUrl}')`;
+            modalImage.style.backgroundImage = `url('${ikResized(p.imageUrl, 800)}')`;
 
             return;
           }
@@ -1927,9 +1938,9 @@ ${escapeHtml(c.name)}
           );
 
           if (selectedColor && selectedColor.imageUrl) {
-            modalImage.style.backgroundImage = `url('${selectedColor.imageUrl}')`;
+            modalImage.style.backgroundImage = `url('${ikResized(selectedColor.imageUrl, 800)}')`;
           } else {
-            modalImage.style.backgroundImage = `url('${p.imageUrl}')`;
+            modalImage.style.backgroundImage = `url('${ikResized(p.imageUrl, 800)}')`;
           }
         });
       });
