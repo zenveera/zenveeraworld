@@ -14,9 +14,9 @@
        a one-time upload signature. See SETUP.md for how to get
        both of these.
   ---------------------------------------------------------- */
-  const IMAGEKIT_PUBLIC_KEY = "PASTE_YOUR_IMAGEKIT_PUBLIC_KEY_HERE";
-  const IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/PASTE_YOUR_IMAGEKIT_ID_HERE";
-  const IMAGEKIT_AUTH_ENDPOINT = "https://PASTE_YOUR_WORKER_SUBDOMAIN.workers.dev";
+  const IMAGEKIT_PUBLIC_KEY = "public_UasZiiXDfQB63YZLuYSm7MldRhg=";
+  const IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/zenveera";
+  const IMAGEKIT_AUTH_ENDPOINT = "https://zenveera-imagekit-aut.meetprajapati28105.workers.dev";
 
   /* ==========================================================
      2. DOM REFERENCES (login screen)
